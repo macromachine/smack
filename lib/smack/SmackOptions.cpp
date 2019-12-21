@@ -59,6 +59,9 @@ const llvm::cl::opt<bool> SmackOptions::NoByteAccessInference(
 const llvm::cl::opt<bool> SmackOptions::FloatEnabled(
     "float", llvm::cl::desc("Enable interpreted floating-point type"));
 
+const llvm::cl::opt<bool> SmackOptions::RealEncodings(
+    "real", llvm::cl::desc("Encode floating-point arithmetic using real arithmetic"));
+
 const llvm::cl::opt<bool>
     SmackOptions::MemorySafety("memory-safety",
                                llvm::cl::desc("Enable memory safety checks"));

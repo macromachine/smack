@@ -28,6 +28,7 @@ public:
   static const llvm::cl::opt<bool> NoMemoryRegionSplitting;
   static const llvm::cl::opt<bool> NoByteAccessInference;
   static const llvm::cl::opt<bool> FloatEnabled;
+  static const llvm::cl::opt<bool> RealEncodings;
   static const llvm::cl::opt<bool> MemorySafety;
   static const llvm::cl::opt<bool> IntegerOverflow;
   static const llvm::cl::opt<LLVMAssumeType> LLVMAssumes;

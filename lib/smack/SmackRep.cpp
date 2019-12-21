@@ -216,18 +216,21 @@ std::string SmackRep::procName(llvm::Function *F,
 std::string SmackRep::type(const llvm::Type *t) {
 
   if (t->isFloatingPointTy()) {
-    if (!SmackOptions::FloatEnabled)
+    if (!SmackOptions::FloatEnabled && !SmackOptions::RealEncodings)
       return Naming::UNINTERPRETED_FLOAT_TYPE;
-    if (t->isHalfTy())
-      return Naming::HALF_TYPE;
-    else if (t->isFloatTy())
-      return Naming::FLOAT_TYPE;
-    else if (t->isDoubleTy())
-      return Naming::DOUBLE_TYPE;
-    else if (t->isX86_FP80Ty())
-      return Naming::LONG_DOUBLE_TYPE;
-    else
-      llvm_unreachable("Unsupported floating-point type.");
+    else if (SmackOptions::FloatEnabled) {
+      if (t->isHalfTy())
+        return Naming::HALF_TYPE;
+      else if (t->isFloatTy())
+        return Naming::FLOAT_TYPE;
+      else if (t->isDoubleTy())
+        return Naming::DOUBLE_TYPE;
+      else if (t->isX86_FP80Ty())
+        return Naming::LONG_DOUBLE_TYPE;
+      else
+        llvm_unreachable("Unsupported floating-point type.");
+    } else
+        return Naming::REAL_TYPE;
   }
 
   else if (t->isIntegerTy())

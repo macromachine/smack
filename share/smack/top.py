@@ -204,6 +204,9 @@ def arguments():
   translate_group.add_argument('--float', action="store_true", default=False,
     help='enable bit-precise floating-point functions')
 
+  translate_group.add_argument('--real', action="store_true", default=False,
+    help='encode floating-point arithmetic using real arithmetic')
+
   translate_group.add_argument('--strings', action='store_true', default=False, help='enable support for string')
 
   verifier_group = parser.add_argument_group('verifier options')
@@ -357,6 +360,7 @@ def llvm_to_bpl(args):
   if args.integer_overflow: cmd += ['-integer-overflow']
   if args.llvm_assumes: cmd += ['-llvm-assumes=' + args.llvm_assumes]
   if args.float: cmd += ['-float']
+  if args.real: cmd += ['-real']
   if args.modular: cmd += ['-modular']
   try_command(cmd, console=True)
   annotate_bpl(args)
