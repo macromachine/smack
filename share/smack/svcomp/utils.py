@@ -217,6 +217,7 @@ def verify_bpl_svcomp(args):
   corral_command += ["/tryCTrace", "/noTraceOnDisk", "/printDataValues:1"]
   corral_command += ["/useProverEvaluate", "/cex:1"]
   corral_command += ["/bopt:proverOpt:O:smt.qi.eager_threshold=100"]
+  corral_command += ["/oldCorralFlags"]
 
   with open(args.bpl_file, "r") as f:
     bpl = f.read()
