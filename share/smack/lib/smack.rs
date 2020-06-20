@@ -1,3 +1,5 @@
+#![crate_type = "staticlib"]
+
 #[cfg(verifier = "smack")]
 extern {
   pub fn __VERIFIER_assert(x: i32);
@@ -26,6 +28,31 @@ macro_rules! verifier_assert {
 
 #[cfg(verifier = "smack")]
 #[macro_export]
+macro_rules! print {
+  ($fmt:expr) => ();
+  ($fmt:expr, $($arg:expr),*) => ( $($arg);* )
+}
+
+#[cfg(verifier = "smack")]
+#[macro_export]
+macro_rules! println {
+  ($($arg:tt)*) => ( print!($($arg)*) )
+}
+
+#[cfg(verifier = "smack")]
+#[macro_export]
+macro_rules! eprint {
+  ($($arg:tt)*) => ( print!($($arg)*) )
+}
+
+#[cfg(verifier = "smack")]
+#[macro_export]
+macro_rules! eprintln {
+  ($($arg:tt)*) => ( print!($($arg)*) )
+}
+
+#[cfg(verifier = "smack")]
+#[macro_export]
 macro_rules! assert {
   ( $cond:expr ) => ( verifier_assert!($cond); )
 }
@@ -33,13 +60,13 @@ macro_rules! assert {
 #[cfg(verifier = "smack")]
 #[macro_export]
 macro_rules! assert_eq {
-  ( $lhs:expr, $rhs:expr ) => ( assert!($lhs == $rhs); )
+  ( $lhs:expr, $rhs:expr ) => ( smack::assert!($lhs == $rhs); )
 }
 
 #[cfg(verifier = "smack")]
 #[macro_export]
 macro_rules! assert_neq {
-  ( $lhs:expr, $rhs:expr ) => ( assert!($lhs != $rhs); )
+  ( $lhs:expr, $rhs:expr ) => ( smack::assert!($lhs != $rhs); )
 }
 
 #[macro_export]

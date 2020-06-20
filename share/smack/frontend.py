@@ -48,6 +48,7 @@ def extra_libs():
   return {
     'fortran' : fortran_build_libs, 
     'cxx'     : cplusplus_build_libs,
+    'rust'    : rust_build_libs,
     # coming soon - libraries for OBJC, Rust, Swift, etc.
   }
 
@@ -218,24 +219,23 @@ def json_compilation_database_frontend(input_file, args):
 
   llvm_to_bpl(args)
 
+def default_rust_compile_command(args):
+  compile_command = ['rustc', '-A', 'unused-imports', '-C', 'opt-level=0', '-C',
+                     'no-prepopulate-passes', '-g', '--cfg', 'verifier="smack"',
+                     '-C', 'passes=name-anon-globals']
+  return compile_command + args
+
+def rust_build_rlib(input_file, args):
+  compile_command = default_rust_compile_command(['--crate-type', 'rlib,lib'])
+  rlib = temporary_file('lib'+os.path.splitext(os.path.basename(input_file))[0], '.rlib', args)
+  try_command(compile_command + ['-o', rlib, input_file], console=True)
+  return rlib
+  
 def rust_frontend(input_file, args):
   """Generate Boogie code from Rust programming language source(s)."""
-  compile_command = ['rustc', '-A', 'unused-imports', '-C', 'opt-level=0',
-                     '-C', 'no-prepopulate-passes', '-g', '--emit=llvm-bc',
-                     '--cfg', 'verifier="smack"', '-C', 'passes=name-anon-globals']
+  rlib = rust_build_rlib(smack_lib()+'/smack.rs', args)
+  compile_command = default_rust_compile_command(['--emit=llvm-bc', '--extern', 'smack='+rlib])
   
-  # This links in the Rust SMACK library. This is needed due to the way rustc
-  # finds a program's libraries.
-  abs_path = os.path.dirname(os.path.abspath(input_file))
-  link_target = os.path.join(abs_path, "smack.rs")
-  link_source = os.path.join(smack_lib(), 'smack.rs')
-  try:
-    os.symlink(link_source, link_target)
-  except:
-    if not os.path.exists(link_source):
-      raise RuntimeError("Could not find or create smack module.")
-    # Otherwise okay
-    
   return compile_to_bc(input_file,compile_command,args)
 
 # Build libs functions here
@@ -285,6 +285,19 @@ def cplusplus_build_libs(args):
 
   compile_command = default_clang_compile_command(args,True)
   compile_command[0] = 'clang++'
+
+  for c in [os.path.join(smack_lib(), c) for c in libs]:
+    bc = compile_to_bc(c,compile_command,args)
+    bitcodes.append(bc)
+
+  return bitcodes
+
+def rust_build_libs(args):
+  """Generate Rust specific LLVM bitcodes for SMACK libraries."""
+  bitcodes = []
+  libs = ['smack.rs']
+
+  compile_command = default_rust_compile_command(['--emit=llvm-bc', '--crate-type', 'lib'])
 
   for c in [os.path.join(smack_lib(), c) for c in libs]:
     bc = compile_to_bc(c,compile_command,args)
