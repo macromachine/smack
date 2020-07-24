@@ -69,6 +69,10 @@ def svcomp_frontend(input_file, args):
   if args.only_check_memcleanup:
     args.memory_safety = False
 
+  if not args.memory_safety and not args.only_check_memcleanup and not args.integer_overflow:
+    inject_assert_false(args)
+
+
 def svcomp_check_property(args):
   args.only_check_memcleanup = False
   # Check if property is vanilla reachability, and return unknown otherwise
@@ -180,8 +184,6 @@ def verify_bpl_svcomp(args):
   """Verify the Boogie source file using SVCOMP-tuned heuristics."""
   heurTrace = "\n\nHeuristics Info:\n"
 
-  if not args.memory_safety and not args.only_check_memcleanup and not args.integer_overflow:
-    inject_assert_false(args)
 
   if args.memory_safety:
     if not (args.only_check_valid_deref or args.only_check_valid_free or args.only_check_memleak):
