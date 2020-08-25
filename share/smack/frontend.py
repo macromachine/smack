@@ -3,6 +3,7 @@ import sys
 import re
 import json
 from .utils import temporary_file, try_command
+from .versions import LLVM_SHORT_VERSION
 
 
 def languages():
@@ -76,8 +77,13 @@ def smack_lib():
     return os.path.join(smack_root(), 'share', 'smack', 'lib')
 
 
+def llvm_bin_with_version(name):
+    return name + '-' + LLVM_SHORT_VERSION
+
+
 def default_clang_compile_command(args, lib=False):
-    cmd = ['clang', '-c', '-emit-llvm', '-O0', '-g', '-gcolumn-info']
+    cmd = [llvm_bin_with_version('clang'), '-c', '-emit-llvm', '-O0',
+           '-g', '-gcolumn-info']
     # Starting from LLVM 5.0, we need the following two options
     # in order to enable optimization passes.
     # See: https://stackoverflow.com/a/46753969.
@@ -152,7 +158,7 @@ def fortran_compile_to_bc(input_file, compile_command, args):
          '-i',
          's/i32 1, !\"Debug Info Version\"/i32 2, !\"Debug Info Version\"/g',
          ll])
-    try_command(['llvm-as', ll])
+    try_command([llvm_bin_with_version('llvm-as'), ll])
     try_command(['rm', ll])
     bc = '.'.join(ll.split('.')[:-1] + ['bc'])
     return bc
@@ -250,9 +256,12 @@ def json_compilation_database_frontend(input_file, args):
             if 'objects' in cc:
                 # TODO what to do when there are multiple linkings?
                 bit_codes = [re.sub('[.]o$', '.bc', f) for f in cc['objects']]
-                try_command(['llvm-link', '-o', args.bc_file] + bit_codes)
-                try_command(['llvm-link', '-o', args.linked_bc_file,
-                             args.bc_file] + default_build_libs(args))
+                try_command(([llvm_bin_with_version('llvm-link'), '-o',
+                             args.bc_file]
+                             + bit_codes))
+                try_command(([llvm_bin_with_version('llvm-link'), '-o',
+                             args.linked_bc_file, args.bc_file]
+                             + default_build_libs(args)))
 
             else:
                 command = cc['command']
@@ -352,7 +361,7 @@ def cplusplus_build_libs(args):
     libs = ['smack.cpp']
 
     compile_command = default_clang_compile_command(args, True)
-    compile_command[0] = 'clang++'
+    compile_command[0] = llvm_bin_with_version('clang++')
 
     for c in [os.path.join(smack_lib(), c) for c in libs]:
         bc = compile_to_bc(c, compile_command, args)
@@ -385,9 +394,10 @@ def link_bc_files(bitcodes, libs, args):
     for build_lib in libs:
         smack_libs += build_lib(args)
 
-    try_command(['llvm-link', '-o', args.bc_file] + bitcodes)
-    try_command(['llvm-link', '-o', args.linked_bc_file,
-                 args.bc_file] + smack_libs)
+    try_command([llvm_bin_with_version('llvm-link'), '-o',
+                 args.bc_file] + bitcodes)
+    try_command([llvm_bin_with_version('llvm-link'), '-o',
+                 args.linked_bc_file, args.bc_file] + smack_libs)
 
     # import here to avoid a circular import
     from .top import llvm_to_bpl
